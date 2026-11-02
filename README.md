@@ -164,6 +164,11 @@ db-changelog tag --url "$DB_URL" -u "$DB_USER" -p "$DB_PASS" "v1.2.0"
 ```
 
 
+## Related Projects
+
+* [toolarium-db-changelog](https://github.com/toolarium/toolarium-db-changelog): the core database changelog and migration library
+
+
 ## Built With
 
 * [cb](https://github.com/toolarium/common-build) - The toolarium common build
