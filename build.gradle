@@ -1,8 +1,7 @@
 /*
  * build.gradle
  *
- * Copyright by toolarium-db-changelog-cli, all rights reserved.
- * MIT License: https://mit-license.org
+ * Copyright by toolarium, all rights reserved.
  */
 plugins {
   id 'com.github.johnrengelman.shadow' version '8.1.1'
@@ -14,20 +13,52 @@ apply from: "https://raw.githubusercontent.com/toolarium/common-gradle-build/mas
 /***************************************************************************************
  * define the main class name
  ***************************************************************************************/
-mainClassName = "com.github.toolarium.db.changelog.cli.MyApplication"
+mainClassName = "com.github.toolarium.db.changelog.cli.DbChangelogCli"
+
+application {
+    mainClass.set(mainClassName)
+}
+
+shadowJar {
+    archiveClassifier.set('')
+    mergeServiceFiles()
+}
 
 
 /************************************************************************************************************************
  * Define project dependencies
  ************************************************************************************************************************/
-dependencies {
-    // see https://docs.gradle.org/current/userguide/java_library_plugin.html
+def picocliVersion = '4.7.6'
+def dbChangelogVersion = '0.8.0'
 
-    // utilities    
-    //implementation "net.sf.jptools:jptools:${commonGradleJptoolsVersion}"
-    //implementation "net.sf.jptools:jptools:${commonGradleJptoolsVersion}:slf4j-redirect"
+dependencies {
+    // core library
+    implementation "com.github.toolarium:toolarium-db-changelog:${dbChangelogVersion}"
+
+    // cli framework
+    implementation "info.picocli:picocli:${picocliVersion}"
+    annotationProcessor "info.picocli:picocli-codegen:${picocliVersion}"
 
     // logging
     implementation "org.slf4j:slf4j-api:${commonGradleSlf4jApiVersion}"
     implementation "ch.qos.logback:logback-classic:${commonGradleLogbackVersion}"
+
+
+
+}
+
+// CVE fixes: override transitive jackson 2.18.9 from toolarium-db-changelog.
+// Must use eachDependency to override the common-gradle-build "pin to latest patch" rule.
+def jacksonCveVersion = '2.18.11'
+configurations.all {
+    resolutionStrategy.eachDependency { details ->
+        if (details.requested.group == 'com.fasterxml.jackson.core' || details.requested.group == 'com.fasterxml.jackson') {
+            details.useVersion jacksonCveVersion
+            details.because 'CVE-2026-89407, CVE-2026-89425, CVE-2026-68497, CVE-2026-91776, CVE-2026-91777'
+        }
+    }
+}
+
+compileJava {
+    options.compilerArgs += ["-Aproject=${project.group}/${project.name}"]
 }
